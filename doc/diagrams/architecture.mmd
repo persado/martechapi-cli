@@ -8,5 +8,8 @@ flowchart LR
         runfn --> root["cobra root command"]
         root --> vcmd["version command"]
         vcmd --> vpkg["version.String"]
+        runfn -- "goroutine" --> latest["update.Latest"]
+        latest -- "result within 2 s of exit" --> notice["upgrade notice on stderr"]
     end
     ldflags -. "stamps Commit, BuildTime" .-> vpkg
+    latest -- "HEAD releases/latest" --> gh["GitHub"]
