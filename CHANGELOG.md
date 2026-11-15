@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Versions follow [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); AGENTS.md Rule 8 sets when each part changes.
 
+## [0.1.1] — 2026-11-15
+
+### Added
+
+- **Install:** `install.sh` installs the latest release on macOS (Apple silicon) and Linux (x86-64) with one `curl | bash` command. It verifies the SHA-256 checksum, clears the macOS quarantine attribute, and installs to `/usr/local/bin` after asking for confirmation when sudo is needed, or to `~/.local/bin` without sudo. The README opens with it as the Quickstart.
+
 ## [0.1.0] — 2026-11-15
 
 ### Added

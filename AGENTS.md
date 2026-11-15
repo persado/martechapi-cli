@@ -12,6 +12,7 @@ This is the Persado Martech API Commandline Tool. This tool is available for fre
 - **Branches:** `develop` is the default branch and takes direct commits or merged PRs. `main` is protected: changes arrive by pull request only, and force pushes and deletion are blocked.
 - **CI:** GitHub Actions workflow `.github/workflows/ci.yml` runs `make ci` on pushes and pull requests to `develop` and `main`.
 - **Releases:** `.github/workflows/release.yml` runs on every push to `main` (a merged `develop` → `main` PR). It runs `make ci` and `make dist`, then publishes GitHub Release `vX.Y.Z` from `const Version`, with the CHANGELOG section as notes. Assets: `persadomapicli-windows-amd64.exe`, `persadomapicli-windows-arm64.exe`, `persadomapicli-linux-amd64`, `persadomapicli-macos-arm64` and `SHA256SUMS`. The run fails if release `vX.Y.Z` already exists, so a merge into `main` needs a version not yet released (Rule 8).
+- **Installer:** `install.sh` at the repository root, run as `curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash`. It is served from `main`, so a change reaches users only on the next release. It hard-codes the macOS and Linux asset names from `make dist`; renaming an asset or changing `PLATFORMS` requires the same change in `install.sh` and the README.
 - **License:** BSD 3-Clause.
 
 ## 2. Build and Test Commands

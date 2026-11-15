@@ -5,7 +5,7 @@ import "fmt"
 
 // Version is the application version (SemVer 2.0.0). AGENTS.md Rule 8 governs
 // when it changes: every landing on develop increments PATCH.
-const Version = "0.1.0"
+const Version = "0.1.1"
 
 // Commit and BuildTime are stamped by `make build` through -ldflags -X.
 var (

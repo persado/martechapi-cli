@@ -4,7 +4,28 @@
 
 This release contains the project scaffold and a `version` command; the upload commands are still to be added. The Martech API Terms of Service govern how uploaded assets are processed, stored and retained.
 
+## Quickstart
+
+On macOS (Apple silicon) or Linux (x86-64), run:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash
+```
+
+The [install script](install.sh) does the following:
+
+1. Picks the release asset for your OS and processor, including on a Rosetta shell on Apple silicon.
+2. Downloads it and `SHA256SUMS` from the latest release, and stops if the checksum does not match.
+3. On macOS, removes the quarantine attribute so that Gatekeeper does not block the binary.
+4. Installs `persadomapicli` to `/usr/local/bin`. If that directory is not writable by your user, the script says that sudo (administrator) access is required and asks you to confirm before sudo prompts for your password. If you decline, or no terminal is available, it installs to `~/.local/bin` without sudo.
+5. Runs `persadomapicli version`, and prints the line to add to your shell profile if the install directory is not on your `PATH`.
+
+On Windows, follow the [Windows](#windows) steps below. To inspect the script before running it, download it first: `curl -fsSLO https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh`, then `bash install.sh`.
+
 ## Install from a release
+
+The steps below install a release by hand.
+
 
 Download the binary for your platform from the [latest release](https://github.com/persado/martechapi-cli/releases/latest). Each binary is a single executable with no installer and no dependencies.
 
