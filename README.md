@@ -20,7 +20,15 @@ The [install script](install.sh) does the following:
 4. Installs `persadomapicli` to `/usr/local/bin`. If that directory is not writable by your user, the script says that sudo (administrator) access is required and asks you to confirm before sudo prompts for your password. If you decline, or no terminal is available, it installs to `~/.local/bin` without sudo.
 5. Runs `persadomapicli version`, and prints the line to add to your shell profile if the install directory is not on your `PATH`.
 
-On Windows, follow the [Windows](#windows) steps below. To inspect the script before running it, download it first: `curl -fsSLO https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh`, then `bash install.sh`.
+On Windows (x86-64 or ARM64), run in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/persado/martechapi-cli/main/install.ps1 | iex
+```
+
+The [Windows install script](install.ps1) needs no administrator rights. It picks the asset for your processor, verifies its checksum, installs `persadomapicli.exe` to `%LOCALAPPDATA%\Programs\persadomapicli`, removes the "downloaded from the internet" mark that triggers SmartScreen, and adds that folder to your user `Path`.
+
+Running either command again upgrades an existing install to the latest release. To inspect the script before running it, download it first: `curl -fsSLO https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh`, then `bash install.sh`.
 
 ## Install from a release
 
@@ -122,8 +130,12 @@ $expected = (Select-String -Path SHA256SUMS -Pattern $asset -SimpleMatch).Line.S
 
 ```sh
 persadomapicli --help      # list commands
-persadomapicli version     # print the version, commit and build time
+persadomapicli version     # print "Persado Martech API", the version, commit and build time
 ```
+
+Commands that call the Martech API first print `Persado Martech API <version>-<commit>` (for example `Persado Martech API 0.1.2-fed3a10`) on stderr.
+
+Each run checks for a newer release in the background with one HTTPS `HEAD` request to `https://github.com/persado/martechapi-cli/releases/latest`, which sends your IP address and the user agent `persadomapicli/<version>` to GitHub. If a newer release exists, the tool prints the upgrade command on stderr just before it exits. When the command finishes before the check, the tool waits at most 2 seconds for it; if GitHub is unreachable, it prints nothing.
 
 ## Build from source
 

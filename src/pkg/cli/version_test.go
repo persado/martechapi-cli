@@ -13,7 +13,7 @@ func TestVersionCmd(t *testing.T) {
 	if code := Run(context.Background(), []string{"version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit code = %d, want 0 (stderr: %q)", code, stderr.String())
 	}
-	if want := version.String() + "\n"; stdout.String() != want {
+	if want := version.Product + " " + version.String() + "\n"; stdout.String() != want {
 		t.Fatalf("stdout = %q, want %q", stdout.String(), want)
 	}
 }

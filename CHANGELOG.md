@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Versions follow [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); AGENTS.md Rule 8 sets when each part changes.
 
+## [0.1.2] — 2026-11-15
+
+### Added
+
+- **Update check:** every run checks GitHub for a newer release in the background. If one exists, the tool prints the upgrade one-liner for the current OS on stderr before it exits, waiting at most 2 seconds for the check.
+- **API banner:** commands that call the Martech API print `Persado Martech API <version>-<commit>` on stderr before they run.
+- **Install:** `install.ps1` installs or upgrades the latest release on Windows x86-64 and ARM64 with `irm https://raw.githubusercontent.com/persado/martechapi-cli/main/install.ps1 | iex`, without administrator rights.
+
+### Changed
+
+- **version:** the output now starts with `Persado Martech API`, for example `Persado Martech API 0.1.2 (commit fed3a10, built 2026-11-15T09:53:19Z)`.
+
 ## [0.1.1] — 2026-11-15
 
 ### Added

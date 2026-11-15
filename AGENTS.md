@@ -12,7 +12,8 @@ This is the Persado Martech API Commandline Tool. This tool is available for fre
 - **Branches:** `develop` is the default branch and takes direct commits or merged PRs. `main` is protected: changes arrive by pull request only, and force pushes and deletion are blocked.
 - **CI:** GitHub Actions workflow `.github/workflows/ci.yml` runs `make ci` on pushes and pull requests to `develop` and `main`.
 - **Releases:** `.github/workflows/release.yml` runs on every push to `main` (a merged `develop` → `main` PR). It runs `make ci` and `make dist`, then publishes GitHub Release `vX.Y.Z` from `const Version`, with the CHANGELOG section as notes. Assets: `persadomapicli-windows-amd64.exe`, `persadomapicli-windows-arm64.exe`, `persadomapicli-linux-amd64`, `persadomapicli-macos-arm64` and `SHA256SUMS`. The run fails if release `vX.Y.Z` already exists, so a merge into `main` needs a version not yet released (Rule 8).
-- **Installer:** `install.sh` at the repository root, run as `curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash`. It is served from `main`, so a change reaches users only on the next release. It hard-codes the macOS and Linux asset names from `make dist`; renaming an asset or changing `PLATFORMS` requires the same change in `install.sh` and the README.
+- **Installers:** `install.sh` (macOS, Linux: `curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash`) and `install.ps1` (Windows: `irm https://raw.githubusercontent.com/persado/martechapi-cli/main/install.ps1 | iex`) at the repository root. Both are served from `main`, so a change reaches users only on the next release. They hard-code the asset names from `make dist`; renaming an asset or changing `PLATFORMS` requires the same change in both scripts, the README, and the one-liners in `src/pkg/update/update.go`. `install.ps1` reports errors with `throw`, never `exit`, because `exit` under `iex` closes the user's shell.
+- **Update check:** every run sends one `HEAD` request to `https://github.com/persado/martechapi-cli/releases/latest` in the background and reads the tag from the redirect. This avoids the REST API limit of 60 unauthenticated requests per hour per IP address. `cli.Run` waits at most 2 s (`updateWait`) at exit for it, then prints the upgrade notice on stderr if a newer release exists.
 - **License:** BSD 3-Clause.
 
 ## 2. Build and Test Commands
@@ -54,13 +55,14 @@ make ci           # fmt-check + vet + lint + vuln + cover-check (with -race) + b
   - Commands return errors from `RunE`; they do not print and exit. `cli.Run` prints `error: <message>` on stderr and returns exit code 1, and `main` is the only caller of `os.Exit`.
   - Errors are wrapped with `fmt.Errorf("...: %w", err)` and propagated, not panicked.
   - Each command has its own file in `src/pkg/cli/` with an unexported `new<Command>Cmd()` constructor, registered in `newRootCmd`.
+  - A command that calls the Martech API sets `Annotations: map[string]string{annotationAPI: ""}`; the root's `PersistentPreRunE` then prints `version.Banner()` (`Persado Martech API 0.1.2-fed3a10`) on stderr. stdout carries only command output.
 
 ## 4. Testing Instructions
 
 - Run `make test` while iterating and `make test-race` before committing. `make ci` is the full gate CI applies.
 - Tests live next to the file they test, one to one (Rule 5).
 - Test commands end to end through `cli.Run(ctx, args, &stdout, &stderr)` with `bytes.Buffer` writers, and assert on the exit code and the output. Do not call `os.Exit` or touch the real stdout in tests.
-- Prefer table-driven tests with `t.Run` subtests. Tests must not reach the network.
+- Prefer table-driven tests with `t.Run` subtests. Tests must not reach the network: `src/pkg/cli/cli_test.go` stubs `updateCheck` for the whole package in `TestMain`, and `src/pkg/update` tests use `httptest` servers.
 - A test that changes a package variable (for example `version.Commit`) restores it with `t.Cleanup`.
 - `make cover-check` fails CI below 70 % total coverage; the target for changed packages is 80 % (Pre-Commit Checklist).
 
@@ -125,6 +127,7 @@ Every non-trivial source file under `src/` **must** have a dedicated `_test.go` 
 | `src/pkg/cli/root.go` | `src/pkg/cli/root_test.go` |
 | `src/pkg/cli/version.go` | `src/pkg/cli/version_test.go` |
 | `src/pkg/version/version.go` | `src/pkg/version/version_test.go` |
+| `src/pkg/update/update.go` | `src/pkg/update/update_test.go` |
 
 `src/cmd/persadomapicli/main.go` is exempt: it only calls `cli.Run` and `os.Exit`.
 
