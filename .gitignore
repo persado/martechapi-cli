@@ -1,0 +1,4 @@
+src/bin/
+src/coverage.out
+src/coverage.html
+src/dist/

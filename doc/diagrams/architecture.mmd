@@ -1,0 +1,12 @@
+flowchart LR
+    subgraph build["Build time: make build"]
+        git["git HEAD"] --> ldflags["go build -ldflags -X"]
+        clock["UTC build time"] --> ldflags
+    end
+    subgraph run["Run time: persadomapicli binary"]
+        main["cmd/persadomapicli main"] --> runfn["cli.Run"]
+        runfn --> root["cobra root command"]
+        root --> vcmd["version command"]
+        vcmd --> vpkg["version.String"]
+    end
+    ldflags -. "stamps Commit, BuildTime" .-> vpkg

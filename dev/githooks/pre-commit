@@ -1,0 +1,3 @@
+#!/bin/sh
+# Rule 10: no commit with a reachable vulnerability.
+exec make vuln
