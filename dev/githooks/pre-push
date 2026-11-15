@@ -1,0 +1,3 @@
+#!/bin/sh
+# Run the same gates as CI before anything leaves this machine.
+exec make ci
