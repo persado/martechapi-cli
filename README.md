@@ -1,8 +1,8 @@
 # martechapi-cli
 
-`persadomapicli` is the Persado Martech API command-line tool, free to use. It uploads assets in batch for processing by the Martech API, for APIs that take multiple assets, such as Market Scan.
+`persadomapicli` is the Persado Martech API command-line tool, free to use. It scores and optimizes marketing copy, predicts performance and uplift, and uploads, lists and downloads assets, all through the Martech API.
 
-This release contains the project scaffold and a `version` command; the upload commands are still to be added. The Martech API Terms of Service govern how uploaded assets are processed, stored and retained.
+The Martech API Terms of Service govern how uploaded assets are processed, stored and retained.
 
 ## Quickstart
 
@@ -129,9 +129,97 @@ $expected = (Select-String -Path SHA256SUMS -Pattern $asset -SimpleMatch).Line.S
 ## Usage
 
 ```sh
-persadomapicli --help      # list commands
-persadomapicli version     # print "Persado Martech API", the version, commit and build time
+persadomapicli --help               # list commands
+persadomapicli COMMAND --help       # description, limits and examples of one command
+persadomapicli version              # print "Persado Martech API", the version, commit and build time
 ```
+
+### Authentication and region
+
+Every command that calls the API needs an API key (`pmk_...`). The tool reads it from the first of these that is set:
+
+1. `--api-key KEY`
+2. `--api-key-file FILE`, a file that holds the key (surrounding whitespace is ignored)
+3. the environment variable `PERSADO_API_KEY`
+
+```sh
+export PERSADO_API_KEY=pmk_...
+persadomapicli server-version
+```
+
+A key works only in the region that issued it. Choose the region with `--base-url URL` or the environment variable `PERSADO_API_URL`; the default is `https://api.persado.com/api`.
+
+| Region | Base URL |
+|---|---|
+| `api` (default) | `https://api.persado.com/api` |
+| `eapi` | `https://eapi.persado.com/api` |
+| `gapi` | `https://gapi.persado.com/api` |
+
+Flags available on every command:
+
+| Flag | Meaning |
+|---|---|
+| `--api-key`, `--api-key-file`, `--base-url` | Key and region, as above. |
+| `--lang CODE` | Language of localized text in the response (`Accept-Language`), such as `en` or `fr`. |
+| `-o, --output text\|json` | `text` (default) prints tables. `json` prints the server's JSON response unchanged. |
+
+The tool resends a request up to 3 times when the API answers `429 rate_limited` or `503`, waiting for the server's `Retry-After` (at most 30 seconds per wait).
+
+### Commands
+
+| Command | What it does | Example |
+|---|---|---|
+| `server-version` | Prints the API server's version, commit, build time, spec date and environment. | `persadomapicli server-version` |
+| `catalogue` | Lists channels, display channels, industries and limits. `--section` prints one section. | `persadomapicli catalogue --section channels` |
+| `score` | Scores 1 to 4 variants for predicted performance, brand fit and compliance risk. | `persadomapicli score -a "Acme Bank" -v "Your card is waiting" -v "Apply in minutes"` |
+| `optimize` | Generates scored, ranked alternatives for one variant. | `persadomapicli optimize -a "Acme Bank" -v "Your card is waiting" --context "0% intro APR for 15 months"` |
+| `job JOB_ID` | Reads a score or optimize job and waits for it to finish. Jobs are kept for 24 hours. | `persadomapicli job job_0123456789abcdef0123456789abcdef` |
+| `performance` | Predicts the performance of 1 to 10 variants. | `persadomapicli performance -a "Acme Bank" -v "Your card is waiting"` |
+| `uplift` | Projects the optimization potential and uplift of one variant. | `persadomapicli uplift -a "Acme Bank" -v "Apply today" --category click` |
+| `asset create FILE...` | Uploads files as assets (alias `asset upload`). Expiry 1 to 90 days, default 30. | `persadomapicli asset create brief.pdf --expires-in-days 7 --attr campaign=spring` |
+| `asset list` | Lists your assets, newest first. `--limit`, `--cursor`, `--all`. | `persadomapicli asset list --all` |
+| `asset get ASSET_ID` | Shows an asset's metadata and a one-hour download link. | `persadomapicli asset get 0b9a3a8e-5d1f-4c53-9a77-3f2d6c1e8b40` |
+| `asset download ASSET_ID` | Saves the asset's file. `--out PATH` or `--out -` for stdout, `--force` to overwrite. | `persadomapicli asset download 0b9a3a8e-5d1f-4c53-9a77-3f2d6c1e8b40 --out brief.pdf` |
+| `version` | Prints the tool's own version. | `persadomapicli version` |
+
+`score`, `optimize`, `performance` and `uplift` share these flags: `-a/--account` (the brand, required), `-c/--channel`, `--display-channel`, `--industry`, `--country`, `--region`, `--language`, `--parent-id`, `-v/--variant` (plain text, or a JSON object of touchpoints such as `'{"headline":"Hi","body":"Apply today"}'`), `-f/--file` and `-e/--edit`. `optimize` adds `--context`, `--always-use`, `--char-limit`, `--brand-file`, `--style-set`, `--exclude`, `--brand-char-limit`, `--assistant-id` and `--content-seeding`. `uplift` adds `--category`. Run `COMMAND --help` for the allowed values and limits.
+
+### Jobs
+
+`score` and `optimize` run as jobs. By default the request asks the API to hold the connection for up to 50 seconds. If the job is still running after that, the command polls it every 2 seconds, and prints the result when it completes. `--async` prints the job id as soon as the API accepts the request, and `persadomapicli job JOB_ID` reads it later. `--timeout` (default 15 minutes) bounds the wait; when it passes, the command exits with an error that names the job so that you can read it later. `job --no-wait` prints the job as it is now.
+
+### Requests from a file, from stdin or from the editor
+
+A request comes from flags alone, from a JSON file (`--file request.json`, or `--file -` for stdin), or from both: flags you pass override the file. The JSON is strict, so an unknown field is an error. Every request is validated locally before any network call, and the error names the field and the fix.
+
+```sh
+persadomapicli score --file request.json -o json
+cat request.json | persadomapicli score --file - 
+```
+
+### Editing a request with `--edit`
+
+`-e/--edit` opens a full-screen editor in the terminal, with no external program, so it behaves the same on macOS, Linux and Windows. It needs an interactive terminal. The editor starts from a JSON template filled with the flags you passed, and lists the allowed values in lines that start with `//`; the tool ignores those lines.
+
+| Key | Action |
+|---|---|
+| `Ctrl+S` | Validate and run. If the request is invalid, the editor stays open and shows the error on the status line. |
+| `Esc` | Cancel. If you changed the text, the editor asks you to confirm with `Y`. |
+| `Ctrl+R` | Reset the text to the template. |
+| `Ctrl+K` | Delete to the end of the line. |
+
+```sh
+persadomapicli score -a "Acme Bank" --edit
+```
+
+### Output and exit codes
+
+Command output goes to stdout. The banner, job progress, update notices and errors go to stderr, so `persadomapicli ... -o json > out.json` captures clean JSON. Errors print as `error: <message>`; an API error also shows the HTTP status, the error code, the invalid fields and the request id.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | Success. |
+| 1 | Any error: invalid input, API error, `--edit` canceled, timeout, or a job that finished as failed (the job is printed first). |
 
 Commands that call the Martech API first print `Persado Martech API <version>-<commit>` (for example `Persado Martech API 0.1.2-fed3a10`) on stderr.
 

@@ -4,9 +4,19 @@ Must-Follow Rules (MFR) learned from bugs, and a session log. Keep this file und
 
 ## Must-Follow Rules
 
-None yet. Each MFR states the rule, the bug that prompted it and the date.
+Each MFR states the rule, the bug that prompted it and the date.
+
+- **MFR-1 (2026-11-18):** a field the spec makes required whenever its parent is present is a pointer. Bug: `generation.contentSeedingEnabled` as a plain `bool` sent `false` when the user gave no value. AGENTS.md Rule 13.
+- **MFR-2 (2026-11-18):** a wait that hits `--timeout` during an in-flight request returns the "still running" message, not `context deadline exceeded`. AGENTS.md Rule 14.
+- **MFR-3 (2026-11-18):** an upload never sends an absolute local path as the asset filename. Bug: `asset create /Users/<name>/x.pdf` stored the full path. AGENTS.md Rule 14.
 
 ## Session log
+
+### 2026-11-18
+
+- 0.1.3: added the API commands (`score`, `optimize`, `job`, `performance`, `uplift`, `catalogue`, `server-version`, `asset create|list|get|download`), the `pkg/api` client with retries, and the `pkg/editor` Bubble Tea editor behind `--edit`. Developer-key endpoints (`/v1/devkeys/*`) are out of scope.
+- Built by a workflow: 9 implementers, 4 review agents (spec, UX, error handling, quality), per-file fixers and a CI gate; coverage 96.7 %. Lessons became AGENTS.md Rules 11 to 16.
+- Documented in the README, `doc/architecture.md` and the new diagrams `command-flow` and `edit-flow`, rendered with `mmdc` and a puppeteer config (Rule 7).
 
 ### 2026-11-15
 

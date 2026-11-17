@@ -8,8 +8,13 @@ flowchart LR
         runfn --> root["cobra root command"]
         root --> vcmd["version command"]
         vcmd --> vpkg["version.String"]
+        root --> cmds["API commands: score, optimize, job, performance, uplift, catalogue, server-version, asset"]
+        cmds --> common["common.go: flags, finalize, templates"]
+        common -- "--edit" --> ed["pkg/editor: Bubble Tea editor"]
+        cmds --> apic["pkg/api: Client, endpoints, Validate"]
         runfn -- "goroutine" --> latest["update.Latest"]
         latest -- "result within 2 s of exit" --> notice["upgrade notice on stderr"]
     end
     ldflags -. "stamps Commit, BuildTime" .-> vpkg
     latest -- "HEAD releases/latest" --> gh["GitHub"]
+    apic -- "HTTPS, Bearer key" --> mapi["Martech API"]
