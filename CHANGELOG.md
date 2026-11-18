@@ -2,6 +2,24 @@
 
 All notable changes to this project are recorded here, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Versions follow [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); AGENTS.md Rule 8 sets when each part changes.
 
+## [0.1.3] — 2026-11-18
+
+### Added
+
+- **docs:** `USER_MANUAL.md` walks through every command with screenshots of real runs against the staging API; the README links to it.
+- **score:** `score` scores 1 to 4 variants for predicted performance, brand fit and compliance risk (`POST /v1/score`). It waits for the job by default, or prints the job id with `--async`.
+- **optimize:** `optimize` generates scored, ranked alternatives for one variant (`POST /v1/optimize`), with `--context`, `--always-use`, `--char-limit`, `--brand-file`, `--style-set`, `--exclude`, `--brand-char-limit`, `--assistant-id` and `--content-seeding`.
+- **job:** `job JOB_ID` reads a score or optimize job and waits for it to finish. `--no-wait` prints it as it is, `--timeout` bounds the wait (default 15 minutes). A failed job is printed and the command exits 1.
+- **performance, uplift:** `performance` predicts the performance of 1 to 10 variants. `uplift` projects the optimization potential and uplift of one variant, with `--category`.
+- **catalogue, server-version:** `catalogue` lists channels, display channels, industries and limits, with `--section` to print one. `server-version` prints the API server's version, commit, build time, spec date and environment.
+- **asset:** `asset create` (alias `upload`) uploads one or more files, `asset list` lists assets with `--limit`, `--cursor` and `--all`, `asset get` shows an asset's metadata and a one-hour download link, and `asset download` saves the file with `--out` and `--force`.
+- **Requests:** every request command takes its input from flags, from `--file` (JSON, `-` for stdin) or both, and validates it locally before any network call.
+- **Editor:** `-e/--edit` opens a built-in full-screen editor on a commented JSON template filled with the flags given. `Ctrl+S` validates and runs, `Esc` cancels, `Ctrl+R` resets, and the editor stays open until the request is valid. It needs an interactive terminal.
+- **Authentication:** the API key comes from `--api-key`, `--api-key-file` or `PERSADO_API_KEY`, and the region from `--base-url` or `PERSADO_API_URL` (default `https://api.persado.com/api`).
+- **Output:** `-o json` prints the server's JSON unchanged. `--lang` sets the language of localized text.
+- **API client:** a request that gets `429 rate_limited` or `503` is resent up to 3 times, honoring `Retry-After` for at most 30 seconds per wait. API errors show the status, code, invalid fields and request id.
+- **Docs:** README usage section, request-flow, editor and error-model sections in `doc/architecture.md`, and two new diagrams.
+
 ## [0.1.2] — 2026-11-15
 
 ### Added

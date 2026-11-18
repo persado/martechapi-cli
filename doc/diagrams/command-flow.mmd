@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant U as User
+    participant C as Command (RunE)
+    participant V as Validate
+    participant A as api.Client
+    participant S as Martech API
+    U->>C: flags and optional --file
+    C->>C: build request from file, then changed flags
+    C->>V: finalize (edit loop if --edit)
+    V-->>C: request valid, or error before any network call
+    C->>A: endpoint method with the request (wait=50 for score and optimize unless --async)
+    loop up to 3 resends on 429 rate_limited or 503
+        A->>S: HTTPS request with Bearer key
+        S-->>A: status and body
+    end
+    A-->>C: Response with Status, Raw JSON and Value
+    alt job still running after the wait and not --async
+        loop every 2 s until done or --timeout
+            C->>A: Job(id)
+            A->>S: GET /v1/jobs/id
+            S-->>A: job status
+        end
+    end
+    C-->>U: text table or raw JSON on stdout
+    Note over C,U: banner, progress and errors go to stderr

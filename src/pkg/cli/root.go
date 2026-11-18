@@ -28,20 +28,31 @@ var updateCheck = func(ctx context.Context) (string, error) {
 var updateWait = 2 * time.Second
 
 func newRootCmd() *cobra.Command {
+	g := &globalFlags{}
 	root := &cobra.Command{
-		Use:           "persadomapicli",
-		Short:         "Persado Martech API command-line tool",
+		Use:   "persadomapicli",
+		Short: "Persado Martech API command-line tool",
+		Long: `persadomapicli calls the Persado Martech API: score and optimize marketing copy,
+predict performance and uplift, and upload, list and download assets.
+
+Authenticate with an API key (pmk_...) in $` + envAPIKey + `, --api-key or --api-key-file.
+Every command that sends a request accepts --edit to fill it in a built-in editor.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			if _, ok := cmd.Annotations[annotationAPI]; !ok {
 				return nil
 			}
+			if err := g.validate(); err != nil {
+				return err
+			}
 			_, err := fmt.Fprintln(cmd.ErrOrStderr(), version.Banner())
 			return err
 		},
 	}
-	root.AddCommand(newVersionCmd())
+	g.register(root)
+	root.AddCommand(newVersionCmd(), newServerVersionCmd(g), newCatalogueCmd(g),
+		newScoreCmd(g), newOptimizeCmd(g), newJobCmd(g), newPerformanceCmd(g), newUpliftCmd(g), newAssetCmd(g))
 	return root
 }
 
