@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Versions follow [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); AGENTS.md Rule 8 sets when each part changes.
 
+## [0.1.4] — 2026-11-18
+
+### Changed
+
+- **docs:** the open work list is one file, `REMAINING_WORK_2026-11-18.md`, holding only open items; `REMAINING_WORK_2026-11-15.md` is removed.
+
 ## [0.1.3] — 2026-11-18
 
 ### Added
