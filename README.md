@@ -6,7 +6,7 @@ The Martech API Terms of Service govern how uploaded assets are processed, store
 
 ## Quickstart
 
-On macOS (Apple silicon) or Linux (x86-64), run:
+On macOS (Apple silicon) or Linux (x86-64 or ARM64), run:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash
@@ -41,6 +41,7 @@ Download the binary for your platform from the [latest release](https://github.c
 |---|---|
 | macOS, Apple silicon (M1 and later) | `persadomapicli-macos-arm64` |
 | Linux, x86-64 | `persadomapicli-linux-amd64` |
+| Linux, ARM64 (AWS Graviton, Ampere, Raspberry Pi 4 and later with a 64-bit OS) | `persadomapicli-linux-arm64` |
 | Windows, x86-64 | `persadomapicli-windows-amd64.exe` |
 | Windows, ARM64 | `persadomapicli-windows-arm64.exe` |
 
@@ -50,7 +51,7 @@ Asset names carry no version number, so this link always serves the newest relea
 https://github.com/persado/martechapi-cli/releases/latest/download/<asset>
 ```
 
-Each release also contains `SHA256SUMS`, the SHA-256 checksum of every asset (see [Verify a download](#verify-a-download)). No build is published for Intel Macs or ARM Linux; on those platforms, [build from source](#build-from-source).
+Each release also contains `SHA256SUMS`, the SHA-256 checksum of every asset (see [Verify a download](#verify-a-download)). No build is published for Intel Macs or 32-bit ARM Linux; on those platforms, [build from source](#build-from-source).
 
 ### macOS
 
@@ -77,7 +78,7 @@ sudo install -m 0755 persadomapicli-linux-amd64 /usr/local/bin/persadomapicli
 persadomapicli version
 ```
 
-The binary is statically linked and runs on any x86-64 distribution.
+On an ARM64 machine (`uname -m` prints `aarch64`), replace `amd64` with `arm64`. The binary is statically linked and runs on any x86-64 or ARM64 distribution.
 
 ### Windows
 
@@ -252,7 +253,7 @@ make all     # fmt-check + vet + test + build
 make ci      # the gates CI runs
 ```
 
-A release is published when a pull request from `develop` is merged into `main`: the `release` workflow runs `make ci`, builds the four binaries, and publishes them as release `vX.Y.Z`, where `X.Y.Z` is `const Version` in `src/pkg/version/version.go`. The release notes are that version's section of the CHANGELOG.
+A release is published when a pull request from `develop` is merged into `main`: the `release` workflow runs `make ci`, builds the release binaries, and publishes them as release `vX.Y.Z`, where `X.Y.Z` is `const Version` in `src/pkg/version/version.go`. The release notes are that version's section of the CHANGELOG.
 
 Contributor and agent rules are in [AGENTS.md](AGENTS.md); the change history is in [CHANGELOG.md](CHANGELOG.md).
 
