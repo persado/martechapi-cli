@@ -135,3 +135,108 @@ func TestAPIBanner(t *testing.T) {
 		})
 	}
 }
+
+func TestRootHelpListsEveryCommand(t *testing.T) {
+	code, stdout, stderr := runCLI("--help")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	for _, name := range []string{"version", "server-version", "catalogue", "score", "optimize", "job", "performance", "uplift", "asset"} {
+		if !strings.Contains(stdout, name) {
+			t.Errorf("help does not list %q:\n%s", name, stdout)
+		}
+	}
+	if stderr != "" {
+		t.Errorf("help must not print the banner: %q", stderr)
+	}
+}
+
+func TestRootGlobalFlags(t *testing.T) {
+	root := newRootCmd()
+	for _, name := range []string{"api-key", "api-key-file", "base-url", "lang", "output"} {
+		if root.PersistentFlags().Lookup(name) == nil {
+			t.Errorf("missing persistent flag --%s", name)
+		}
+	}
+	if f := root.PersistentFlags().ShorthandLookup("o"); f == nil || f.Name != "output" || f.DefValue != "text" {
+		t.Errorf("-o = %+v", f)
+	}
+	// Every subcommand inherits them.
+	for _, sub := range root.Commands() {
+		if sub.InheritedFlags().Lookup("output") == nil {
+			t.Errorf("%s does not inherit --output", sub.Name())
+		}
+	}
+}
+
+func TestRootCommandsMarkedAsAPI(t *testing.T) {
+	apiCmds := map[string]bool{"server-version": true, "catalogue": true, "score": true, "optimize": true, "job": true, "performance": true, "uplift": true, "asset": true}
+	for _, sub := range newRootCmd().Commands() {
+		name := sub.Name()
+		if name == "help" || name == "completion" {
+			continue
+		}
+		_, marked := sub.Annotations[annotationAPI]
+		if name == "asset" {
+			// asset is a group: its subcommands carry the annotation.
+			marked = true
+			for _, c := range sub.Commands() {
+				if _, ok := c.Annotations[annotationAPI]; !ok {
+					t.Errorf("asset %s is not marked as an API command", c.Name())
+				}
+			}
+		}
+		if marked != apiCmds[name] {
+			t.Errorf("%s: API-marked = %v, want %v", name, marked, apiCmds[name])
+		}
+	}
+}
+
+func TestRootOutputValidation(t *testing.T) {
+	tests := []struct {
+		name       string
+		args       []string
+		wantCode   int
+		wantStderr string
+		wantBanner bool
+	}{
+		{"api command with bad output fails before the banner", []string{"job", testJobID, "-o", "yaml"}, 1, `--output must be text or json, not "yaml"`, false},
+		{"non-API command ignores --output", []string{"version", "-o", "yaml"}, 0, "", false},
+		{"api command with good output prints the banner", []string{"job", "bad-id", "-o", "json"}, 1, "invalid request", true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			code, _, stderr := runCLI(tc.args...)
+			if code != tc.wantCode {
+				t.Fatalf("exit code = %d, want %d (stderr %q)", code, tc.wantCode, stderr)
+			}
+			if !strings.Contains(stderr, tc.wantStderr) {
+				t.Errorf("stderr %q lacks %q", stderr, tc.wantStderr)
+			}
+			if got := strings.Contains(stderr, version.Banner()); got != tc.wantBanner {
+				t.Errorf("banner present = %v, want %v (stderr %q)", got, tc.wantBanner, stderr)
+			}
+		})
+	}
+}
+
+func TestRootBannerOnStderrOnly(t *testing.T) {
+	srv, _ := ctJobServer(t, ctJob("completed", ""))
+	code, stdout, stderr := runCLI("job", testJobID, "--base-url", srv.URL, "--api-key", "pmk_test")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	if !strings.HasPrefix(stderr, version.Banner()+"\n") {
+		t.Errorf("stderr = %q, want banner first", stderr)
+	}
+	if strings.Contains(stdout, version.Banner()) {
+		t.Errorf("stdout must not carry the banner: %q", stdout)
+	}
+}
+
+func TestRootVersionHasNoBanner(t *testing.T) {
+	code, _, stderr := runCLI("version")
+	if code != 0 || stderr != "" {
+		t.Fatalf("exit %d stderr %q", code, stderr)
+	}
+}

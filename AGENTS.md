@@ -8,7 +8,7 @@ This is the Persado Martech API Commandline Tool. This tool is available for fre
 
 - **What it is:** `martechapi-cli`, a Go command-line application. The binary is `persadomapicli`; the command tree uses [cobra](https://github.com/spf13/cobra) v1.10.2.
 - **Toolchain:** Go 1.27.4, set by the `go` line of `src/go.mod`. CI reads the version from that file; `make go-bump V=X.Y.Z` moves it.
-- **Layout:** the Go module (`github.com/persado/martechapi-cli/src`) lives in `src/`: entry point in `src/cmd/persadomapicli/`, commands in `src/pkg/cli/`, version in `src/pkg/version/`. Details in [doc/architecture.md](doc/architecture.md).
+- **Layout:** the Go module (`github.com/persado/martechapi-cli/src`) lives in `src/`: entry point in `src/cmd/persadomapicli/`, commands in `src/pkg/cli/`, API client in `src/pkg/api/`, `--edit` editor in `src/pkg/editor/`, version in `src/pkg/version/`. Details in [doc/architecture.md](doc/architecture.md).
 - **Branches:** `develop` is the default branch and takes direct commits or merged PRs. `main` is protected: changes arrive by pull request only, and force pushes and deletion are blocked.
 - **CI:** GitHub Actions workflow `.github/workflows/ci.yml` runs `make ci` on pushes and pull requests to `develop` and `main`.
 - **Releases:** `.github/workflows/release.yml` runs on every push to `main` (a merged `develop` → `main` PR). It runs `make ci` and `make dist`, then publishes GitHub Release `vX.Y.Z` from `const Version`, with the CHANGELOG section as notes. Assets: `persadomapicli-windows-amd64.exe`, `persadomapicli-windows-arm64.exe`, `persadomapicli-linux-amd64`, `persadomapicli-macos-arm64` and `SHA256SUMS`. The run fails if release `vX.Y.Z` already exists, so a merge into `main` needs a version not yet released (Rule 8).
@@ -223,6 +223,48 @@ The remaining work ("still open" or "bugs found but not created by me" or "still
 - **A finding is fixed, not waived.** Upgrade the module or the Go toolchain it names: for a stdlib finding, run `make go-bump V=X.Y.Z`; CI picks up the new version from `src/go.mod`. If no fixed version exists yet, stop and ask; do not merge around it.
 - New vulnerabilities are published independently of our changes, so a commit that touches nothing related can still fail the gate. That is the point: fix it in its own commit first.
 
+## 11. API command shape **Every command that calls the Martech API is built the same way as `score.go`.**
+
+- The request is built from `--file` (strict JSON, `-` for stdin), then only the flags the user changed override it, then `finalize` validates it or opens the editor. No request leaves the machine before the local `Validate()` passes.
+- Every command that takes input accepts `-e/--edit`. Its template is commented JSON (`//` lines): it lists the allowed values, pre-fills the flag values and carries every required field, with empty values where the user gave none.
+- Text output goes to stdout as tabwriter tables with title-case headers (`Filename`, not `FILENAME`) and `-` for a null value. `-o json` prints the server's JSON unchanged. Progress, the banner and errors go to stderr.
+- Scores are printed at the precision the API returns: two decimals for `performance` and `uplift`, integers for job variants.
+- The "Developer keys" endpoints (`/v1/devkeys/*`) are out of scope unless the maintainer asks for them.
+
+## 12. The `--edit` editor is built in **It never starts `$EDITOR` or any other external program.**
+
+- `src/pkg/editor` is a Bubble Tea v2 textarea. It shows its keys on screen at all times (Ctrl+S save and run, Esc cancel, Ctrl+R reset), shows a validation error without closing, and asks before discarding changes.
+- It must not depend on OS support: the textarea's clipboard paste binding stays disabled (it shells out to `pbpaste`/`xclip`); terminal paste still works.
+- `--edit` without an interactive terminal fails with an error. Tests replace `runEditor` and never open a terminal.
+
+## 13. Validation mirrors the spec exactly **A field the spec makes conditionally required is a pointer.**
+
+- When the spec says a field is required whenever its parent is present (`generation.contentSeedingEnabled`), the Go field is a pointer, so that a missing value differs from `false`. A plain `bool` silently sent `false`.
+- An enum check must reject the empty string where the spec has no empty value: `responseCategories: [""]` passed locally and failed on the server.
+- Check a media type with `mime.ParseMediaType`, as the server does. A test for `contains "/"` accepted `text/`.
+
+Lessons from the 0.1.3 review, 2026-11-18.
+
+## 14. Bounded I/O **Every network call and file write has a bound and a clean failure.**
+
+- `main` cancels the context on SIGINT and SIGTERM (`signal.NotifyContext`), so deferred cleanup runs on Ctrl-C.
+- The HTTP client has a timeout (`httpTimeout`); `http.DefaultClient` has none and hangs on a stalled server.
+- A wait or poll that hits its `--timeout` returns the actionable message ("still running after X; read it later with ..."), including when the deadline expires during an in-flight request, never the raw `context deadline exceeded`.
+- A batch loop stops at the first context cancellation instead of reporting one failure per remaining item.
+- A download writes to a temporary file in the target directory and renames it on success, so a failure leaves no partial file. It refuses to overwrite without `--force`.
+- An upload never sends an absolute path or one that climbs out with `..`: it sends the base name, because a full path exposes the user's directory layout and OS account name. A relative path such as `briefs/q4.pdf` is kept.
+- Not-found errors name the resource and the next step (jobs are kept 24 hours; `asset list` shows valid ids).
+
+## 15. Shared helpers, one copy **Search before adding a helper; parallel work duplicates them.**
+
+- Command helpers used by more than one command live in `src/pkg/cli/common.go`; test helpers used by more than one test file (`runCLI`, `stubEditor`, `fastPoll`) live in `src/pkg/cli/cli_test.go`.
+- Ignore a write's result explicitly (`_, _ = fmt.Fprintf(...)`) and close in a closure (`defer func() { _ = f.Close() }()`); golangci-lint's errcheck fails CI otherwise.
+- Compare against constants (`outputJSON`), not string literals.
+
+## 16. Smoke test against staging before a PR **Unit tests prove the code matches our reading of the spec; only the server proves the reading.**
+
+- Run every changed command once against `https://stg-api.persado.com/api` with `--api-key-file`. Never print, log or commit the key. Keep staging assets few and small.
+
 ## Pre-Commit Checklist
 
 - [ ] Patch version incremented in `src/pkg/version/version.go` for this landing on `develop` (Rule 8)
@@ -256,6 +298,7 @@ one as evidence:
 | Document | Contents |
 |---|---|
 | [README.md](README.md) | What the project is, prerequisites, quickstart. |
+| [USER_MANUAL.md](USER_MANUAL.md) | Task-by-task guide to every command, with screenshots in `doc/manual/`. |
 | [CHANGELOG.md](CHANGELOG.md) | Every user-facing change, by version (Rule 6). |
 | [doc/architecture.md](doc/architecture.md) | Source layout, run-time command flow, build stamping, how to add a command. |
 | [doc/MEMORY.md](doc/MEMORY.md) | Must-Follow Rules and the session log. |
@@ -272,3 +315,5 @@ embeds the PNG and links the `.mmd`. Rule 7 gives the render command.
 | Source | Embedded in |
 |---|---|
 | [doc/diagrams/architecture.mmd](doc/diagrams/architecture.mmd) | [doc/architecture.md](doc/architecture.md) |
+| [doc/diagrams/command-flow.mmd](doc/diagrams/command-flow.mmd) | [doc/architecture.md](doc/architecture.md) |
+| [doc/diagrams/edit-flow.mmd](doc/diagrams/edit-flow.mmd) | [doc/architecture.md](doc/architecture.md) |

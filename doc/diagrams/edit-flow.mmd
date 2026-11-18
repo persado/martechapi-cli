@@ -1,0 +1,17 @@
+flowchart TD
+    start["--edit given"] --> tty{"stdin and stdout are terminals?"}
+    tty -- "no" --> err1["error: --edit needs an interactive terminal"]
+    tty -- "yes" --> tmpl["template: JSON filled from flags, with // help lines"]
+    tmpl --> ed["editor.Edit shows the text"]
+    ed --> key{"key pressed"}
+    key -- "typing" --> ed
+    key -- "Ctrl+R" --> reset["reset to template"] --> ed
+    key -- "Ctrl+S" --> strip["StripComments removes // lines"]
+    strip --> chk{"strict decode and Validate pass?"}
+    chk -- "no" --> show["status line shows the error"] --> ed
+    chk -- "yes" --> done["request stored, command continues"]
+    key -- "Esc" --> changed{"text changed?"}
+    changed -- "no" --> cancel["ErrCanceled, exit 1"]
+    changed -- "yes" --> ask{"confirm with Y?"}
+    ask -- "Y" --> cancel
+    ask -- "other key" --> ed
