@@ -17,6 +17,7 @@ Each MFR states the rule, the bug that prompted it and the date.
 - 0.1.3: added the API commands (`score`, `optimize`, `job`, `performance`, `uplift`, `catalogue`, `server-version`, `asset create|list|get|download`), the `pkg/api` client with retries, and the `pkg/editor` Bubble Tea editor behind `--edit`. Developer-key endpoints (`/v1/devkeys/*`) are out of scope.
 - Built by a workflow: 9 implementers, 4 review agents (spec, UX, error handling, quality), per-file fixers and a CI gate; coverage 96.7 %. Lessons became AGENTS.md Rules 11 to 16.
 - Documented in the README, `doc/architecture.md` and the new diagrams `command-flow` and `edit-flow`, rendered with `mmdc` and a puppeteer config (Rule 7).
+- Added `USER_MANUAL.md` with 20 screenshots in `doc/manual/`, captured in a tmux session against staging and rendered with `freeze` (charmbracelet). tmux wraps long lines and trims trailing spaces, so a wrapped presigned URL escaped a single-line redaction: capture wide tables in a wider window, and check every capture for `X-Amz-Signature` and `AKIA` before committing.
 
 ### 2026-11-15
 

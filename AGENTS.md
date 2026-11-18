@@ -298,6 +298,7 @@ one as evidence:
 | Document | Contents |
 |---|---|
 | [README.md](README.md) | What the project is, prerequisites, quickstart. |
+| [USER_MANUAL.md](USER_MANUAL.md) | Task-by-task guide to every command, with screenshots in `doc/manual/`. |
 | [CHANGELOG.md](CHANGELOG.md) | Every user-facing change, by version (Rule 6). |
 | [doc/architecture.md](doc/architecture.md) | Source layout, run-time command flow, build stamping, how to add a command. |
 | [doc/MEMORY.md](doc/MEMORY.md) | Must-Follow Rules and the session log. |

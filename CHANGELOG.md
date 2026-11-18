@@ -6,6 +6,7 @@ All notable changes to this project are recorded here, in [Keep a Changelog](htt
 
 ### Added
 
+- **docs:** `USER_MANUAL.md` walks through every command with screenshots of real runs against the staging API; the README links to it.
 - **score:** `score` scores 1 to 4 variants for predicted performance, brand fit and compliance risk (`POST /v1/score`). It waits for the job by default, or prints the job id with `--async`.
 - **optimize:** `optimize` generates scored, ranked alternatives for one variant (`POST /v1/optimize`), with `--context`, `--always-use`, `--char-limit`, `--brand-file`, `--style-set`, `--exclude`, `--brand-char-limit`, `--assistant-id` and `--content-seeding`.
 - **job:** `job JOB_ID` reads a score or optimize job and waits for it to finish. `--no-wait` prints it as it is, `--timeout` bounds the wait (default 15 minutes). A failed job is printed and the command exits 1.

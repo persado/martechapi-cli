@@ -128,6 +128,8 @@ $expected = (Select-String -Path SHA256SUMS -Pattern $asset -SimpleMatch).Line.S
 
 ## Usage
 
+The [user manual](USER_MANUAL.md) covers every command step by step, with screenshots of real runs. This section is a summary.
+
 ```sh
 persadomapicli --help               # list commands
 persadomapicli COMMAND --help       # description, limits and examples of one command
