@@ -10,7 +10,7 @@ LDFLAGS    := -s -w -X $(VERSION_PKG).Commit=$(COMMIT) -X $(VERSION_PKG).BuildTi
 COVER_MIN             ?= 70
 GOLANGCI_LINT_VERSION := v2.15.0
 GOVULNCHECK_VERSION   := v1.9.0
-PLATFORMS             := windows/amd64 windows/arm64 linux/amd64 darwin/arm64
+PLATFORMS             := windows/amd64 windows/arm64 linux/amd64 linux/arm64 darwin/arm64
 
 .PHONY: help build test test-race cover cover-html cover-check vet fmt fmt-check lint \
 	dist go-bump vuln hooks prepush tidy verify download clean all ci

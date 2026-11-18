@@ -5,7 +5,7 @@ import "fmt"
 
 // Version is the application version (SemVer 2.0.0). AGENTS.md Rule 8 governs
 // when it changes: every landing on develop increments PATCH.
-const Version = "0.1.4"
+const Version = "0.1.5"
 
 // Product is the name printed before the version.
 const Product = "Persado Martech API"

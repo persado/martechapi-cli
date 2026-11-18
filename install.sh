@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs the latest persadomapicli release binary.
 #   curl -fsSL https://raw.githubusercontent.com/persado/martechapi-cli/main/install.sh | bash
-# Supported: macOS on Apple silicon, Linux on x86-64. The asset names must match `make dist`.
+# Supported: macOS on Apple silicon, Linux on x86-64 and ARM64. The asset names must match `make dist`.
 set -euo pipefail
 
 REPO="persado/martechapi-cli"
@@ -29,6 +29,7 @@ detect_asset() {
     Linux)
       case "$arch" in
         x86_64 | amd64) echo "${BIN}-linux-amd64" ;;
+        aarch64 | arm64) echo "${BIN}-linux-arm64" ;;
         *) fail "no release build for Linux on $arch; build from source: https://github.com/${REPO}#build-from-source" ;;
       esac
       ;;

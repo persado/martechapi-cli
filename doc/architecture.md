@@ -67,7 +67,7 @@ Developer-key endpoints (`/v1/devkeys/*`) are not part of the tool.
 
 ## Release builds
 
-`make dist` cross-compiles the same `main` package with `CGO_ENABLED=0` for `windows/amd64`, `windows/arm64`, `linux/amd64` and `darwin/arm64` (the `PLATFORMS` variable), names each binary `persadomapicli-<os>-<arch>` with `darwin` shown as `macos` and `.exe` on Windows, and writes `SHA256SUMS`. The `release` workflow runs it on every push to `main` and attaches the output to release `vX.Y.Z`.
+`make dist` cross-compiles the same `main` package with `CGO_ENABLED=0` for `windows/amd64`, `windows/arm64`, `linux/amd64`, `linux/arm64` and `darwin/arm64` (the `PLATFORMS` variable), names each binary `persadomapicli-<os>-<arch>` with `darwin` shown as `macos` and `.exe` on Windows, and writes `SHA256SUMS`. The `release` workflow runs it on every push to `main` and attaches the output to release `vX.Y.Z`.
 
 ## Adding a command
 
